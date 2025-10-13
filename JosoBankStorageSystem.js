@@ -1,16 +1,66 @@
 /*:
  * @target MZ
- * @plugindesc [v1.2] Armazenamento visual lado a lado apenas para itens | by JosoGaming
+ * @plugindesc [v1.2] Side-by-side visual item storage system | By JosoGaming
  * @author JosoGaming
  *
- * @command OpenStorage
- * @text Abrir Armazenamento
- * @desc Abre o menu de armazenamento com interface aprimorada lado a lado.
+ * ============================================================================ 
+ * 🔧 JosoBankStorageSystem – ITEM STORAGE SYSTEM
+ * ============================================================================
  *
- * @help
- * Sistema simples de armazenamento de itens.
- * Use o comando de plugin "OpenStorage" para acessar.
+ * Visual storage system for RPG Maker MZ, focused exclusively on items.
+ * Allows transferring items between the player inventory and storage using
+ * a side-by-side interface with clear titles and automatic quantity updates.
+ *
+ * ----------------------------------------------------------------------------
+ * 🔹 Basic Usage:
+ * ----------------------------------------------------------------------------
+ * Use the plugin command to open the storage menu:
+ *
+ *   PluginManager.callCommand("JosoBankStorageSystem", "OpenStorage");
+ *
+ * Interface includes:
+ *   - Inventory → Player's item list
+ *   - Storage   → Stored items list
+ *
+ * ----------------------------------------------------------------------------
+ * 🔸 Features:
+ * ----------------------------------------------------------------------------
+ * - Side-by-side visual of inventory and storage
+ * - Deposit and withdraw items with automatic updates
+ * - Error sound when attempting to withdraw non-existent items
+ * - Custom titles for Inventory and Storage
+ *
+ * ----------------------------------------------------------------------------
+ * 🧠 Integration:
+ * ----------------------------------------------------------------------------
+ * - Works only with items
+ * - Storage persists automatically between game sessions
+ * - Global variable accessible: $simpleItemStorage
+ *
+ * Useful methods:
+ *   - $simpleItemStorage.gainItem(item, amount)
+ *   - $simpleItemStorage.numItems(item)
+ *   - $simpleItemStorage.allItems()
+ *
+ * ----------------------------------------------------------------------------
+ * 🔗 Plugin Order:
+ * ----------------------------------------------------------------------------
+ * Can be loaded alone or with other plugins, no external dependencies required.
+ *
+ * ============================================================================ 
+ * Author: JosoGaming
+ * ============================================================================
+ * YouTube: https://www.youtube.com/@JosoGaming
+ * Email: leandro.bnu@hotmail.com
+ * Contact: Reach out through the channel for inquiries or permission requests.
+ *
+ * ============================================================================ 
+ * LICENSE
+ * ============================================================================
+ * Proprietary plugin by JosoGaming. Redistribution, modification, or reuse in
+ * other projects is strictly forbidden without explicit author permission.
  */
+
 
 (() => {
 window.$simpleItemStorage = null;
@@ -177,7 +227,7 @@ class Scene_SimpleStorage extends Scene_MenuBase {
     }
 
     onItemWithdraw() {
-        const entry = this._storageWindow.item();
+        const entry = this._storageWindow.entry();
         if (!entry || entry.qty <= 0) {
             SoundManager.playBuzzer();
             return;
@@ -187,13 +237,13 @@ class Scene_SimpleStorage extends Scene_MenuBase {
         this._storageWindow.refresh();
         this._inventoryWindow.refresh();
 
-        // Só ativa se ainda houver itens
         if (this._storageWindow.maxItems() > 0) {
             this._storageWindow.activate();
         } else {
             this._commandWindow.activate();
         }
     }
+
 }
 
 class Window_StorageItemList extends Window_ItemList {
@@ -204,9 +254,22 @@ class Window_StorageItemList extends Window_ItemList {
         this.refresh();
     }
 
+    includes(item) {
+        return $simpleItemStorage.numItems(item) > 0;
+    }
+
+    isEnabled(item) {
+        return $simpleItemStorage.numItems(item) > 0;
+    }
+
     makeItemList() {
         this._data = $simpleItemStorage.allItems();
     }
+
+    entry() {
+        return this._data[this.index()] || null;
+    }
+
 
     item() {
         const entry = this._data[this.index()];
@@ -221,7 +284,7 @@ class Window_StorageItemList extends Window_ItemList {
         const rect = this.itemLineRect(index);
         this.changePaintOpacity(true);
         this.drawItemName(item, rect.x, rect.y, rect.width - numberWidth);
-        this.drawText("x" + entry.qty, rect.x, rect.y, rect.width, "right");
+        this.drawText(":" + entry.qty, rect.x, rect.y, rect.width, "right");
         this.changePaintOpacity(true);
     }
 
