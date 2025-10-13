@@ -204,6 +204,14 @@ class Window_StorageItemList extends Window_ItemList {
         this.refresh();
     }
 
+    includes(item) {
+        return $simpleItemStorage.numItems(item) > 0;
+    }
+
+    isEnabled(item) {
+        return $simpleItemStorage.numItems(item) > 0;
+    }
+
     makeItemList() {
         this._data = $simpleItemStorage.allItems();
     }
