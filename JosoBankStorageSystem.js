@@ -1,16 +1,66 @@
 /*:
  * @target MZ
- * @plugindesc [v1.2] Armazenamento visual lado a lado apenas para itens | by JosoGaming
+ * @plugindesc [v1.2] Side-by-side visual item storage system | By JosoGaming
  * @author JosoGaming
  *
- * @command OpenStorage
- * @text Abrir Armazenamento
- * @desc Abre o menu de armazenamento com interface aprimorada lado a lado.
+ * ============================================================================ 
+ * 🔧 JosoBankStorageSystem – ITEM STORAGE SYSTEM
+ * ============================================================================
  *
- * @help
- * Sistema simples de armazenamento de itens.
- * Use o comando de plugin "OpenStorage" para acessar.
+ * Visual storage system for RPG Maker MZ, focused exclusively on items.
+ * Allows transferring items between the player inventory and storage using
+ * a side-by-side interface with clear titles and automatic quantity updates.
+ *
+ * ----------------------------------------------------------------------------
+ * 🔹 Basic Usage:
+ * ----------------------------------------------------------------------------
+ * Use the plugin command to open the storage menu:
+ *
+ *   PluginManager.callCommand("JosoBankStorageSystem", "OpenStorage");
+ *
+ * Interface includes:
+ *   - Inventory → Player's item list
+ *   - Storage   → Stored items list
+ *
+ * ----------------------------------------------------------------------------
+ * 🔸 Features:
+ * ----------------------------------------------------------------------------
+ * - Side-by-side visual of inventory and storage
+ * - Deposit and withdraw items with automatic updates
+ * - Error sound when attempting to withdraw non-existent items
+ * - Custom titles for Inventory and Storage
+ *
+ * ----------------------------------------------------------------------------
+ * 🧠 Integration:
+ * ----------------------------------------------------------------------------
+ * - Works only with items
+ * - Storage persists automatically between game sessions
+ * - Global variable accessible: $simpleItemStorage
+ *
+ * Useful methods:
+ *   - $simpleItemStorage.gainItem(item, amount)
+ *   - $simpleItemStorage.numItems(item)
+ *   - $simpleItemStorage.allItems()
+ *
+ * ----------------------------------------------------------------------------
+ * 🔗 Plugin Order:
+ * ----------------------------------------------------------------------------
+ * Can be loaded alone or with other plugins, no external dependencies required.
+ *
+ * ============================================================================ 
+ * Author: JosoGaming
+ * ============================================================================
+ * YouTube: https://www.youtube.com/@JosoGaming
+ * Email: leandro.bnu@hotmail.com
+ * Contact: Reach out through the channel for inquiries or permission requests.
+ *
+ * ============================================================================ 
+ * LICENSE
+ * ============================================================================
+ * Proprietary plugin by JosoGaming. Redistribution, modification, or reuse in
+ * other projects is strictly forbidden without explicit author permission.
  */
+
 
 (() => {
 window.$simpleItemStorage = null;
