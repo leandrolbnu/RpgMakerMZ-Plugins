@@ -177,7 +177,7 @@ class Scene_SimpleStorage extends Scene_MenuBase {
     }
 
     onItemWithdraw() {
-        const entry = this._storageWindow.item();
+        const entry = this._storageWindow.entry();
         if (!entry || entry.qty <= 0) {
             SoundManager.playBuzzer();
             return;
@@ -187,13 +187,13 @@ class Scene_SimpleStorage extends Scene_MenuBase {
         this._storageWindow.refresh();
         this._inventoryWindow.refresh();
 
-        // Só ativa se ainda houver itens
         if (this._storageWindow.maxItems() > 0) {
             this._storageWindow.activate();
         } else {
             this._commandWindow.activate();
         }
     }
+
 }
 
 class Window_StorageItemList extends Window_ItemList {
@@ -208,6 +208,11 @@ class Window_StorageItemList extends Window_ItemList {
         this._data = $simpleItemStorage.allItems();
     }
 
+    entry() {
+        return this._data[this.index()] || null;
+    }
+
+
     item() {
         const entry = this._data[this.index()];
         return entry ? entry.item : null;
@@ -221,7 +226,7 @@ class Window_StorageItemList extends Window_ItemList {
         const rect = this.itemLineRect(index);
         this.changePaintOpacity(true);
         this.drawItemName(item, rect.x, rect.y, rect.width - numberWidth);
-        this.drawText("x" + entry.qty, rect.x, rect.y, rect.width, "right");
+        this.drawText(":" + entry.qty, rect.x, rect.y, rect.width, "right");
         this.changePaintOpacity(true);
     }
 
