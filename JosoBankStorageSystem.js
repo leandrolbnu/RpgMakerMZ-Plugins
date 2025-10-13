@@ -83,7 +83,7 @@ class Scene_SimpleStorage extends Scene_MenuBase {
 
     createCommandWindow() {
         const y = this.calcWindowHeight(1, false);
-        const h = this.calcWindowHeight(2, true); // Altura aumentada
+        const h = this.calcWindowHeight(2, true);
         const rect = new Rectangle(0, y, Graphics.boxWidth, h);
         const win = new Window_StorageCommand(rect);
         win.setHandler("deposit", this.onDeposit.bind(this));
@@ -120,7 +120,7 @@ class Scene_SimpleStorage extends Scene_MenuBase {
 
     createInventoryTitle() {
         const titleHeight = this.calcWindowHeight(1, false);
-        const y = this.calcWindowHeight(2, false) + 90 - titleHeight; // sobe um pouco pra ficar acima da inventory window
+        const y = this.calcWindowHeight(2, false) + 90 - titleHeight;
         const w = Graphics.boxWidth / 2;
         const rect = new Rectangle(0, y, w, titleHeight);
         const win = new Window_Base(rect);
@@ -131,7 +131,7 @@ class Scene_SimpleStorage extends Scene_MenuBase {
 
     createStorageTitle() {
         const titleHeight = this.calcWindowHeight(1, false);
-        const y = this.calcWindowHeight(2, false) + 90 - titleHeight; // igual acima
+        const y = this.calcWindowHeight(2, false) + 90 - titleHeight; 
         const w = Graphics.boxWidth / 2;
         const rect = new Rectangle(w, y, w, titleHeight);
         const win = new Window_Base(rect);
@@ -150,8 +150,14 @@ class Scene_SimpleStorage extends Scene_MenuBase {
     onWithdraw() {
         this._commandWindow.deactivate();
         this._storageWindow.refresh();
-        this._storageWindow.select(0);
-        this._storageWindow.activate();
+
+        if (this._storageWindow.maxItems() > 0) {
+            this._storageWindow.select(0);
+            this._storageWindow.activate();
+        } else {
+            this._commandWindow.activate();
+            SoundManager.playBuzzer();
+        }
     }
 
     onCancelItem() {
@@ -172,54 +178,55 @@ class Scene_SimpleStorage extends Scene_MenuBase {
 
     onItemWithdraw() {
         const entry = this._storageWindow.item();
-        if (!entry) return;
+        if (!entry || entry.qty <= 0) {
+            SoundManager.playBuzzer();
+            return;
+        }
         $simpleItemStorage.gainItem(entry.item, -1);
         $gameParty.gainItem(entry.item, 1);
         this._storageWindow.refresh();
         this._inventoryWindow.refresh();
-        this._storageWindow.activate();
+
+        // Só ativa se ainda houver itens
+        if (this._storageWindow.maxItems() > 0) {
+            this._storageWindow.activate();
+        } else {
+            this._commandWindow.activate();
+        }
     }
 }
 
-class Window_StorageItemList extends Window_Selectable {
+class Window_StorageItemList extends Window_ItemList {
     initialize(rect) {
         super.initialize(rect);
         this._data = [];
+        this.setCategory("item");
         this.refresh();
-        this.select(0);
-    }
-
-    maxItems() {
-        return this._data.length;
-    }
-
-    item() {
-        return this._data[this.index()] || null;
-    }
-
-    refresh() {
-        this._data = $simpleItemStorage.allItems();
-        this.makeItemList();
-        this.drawAllItems();
     }
 
     makeItemList() {
-        this.contents.clear();
+        this._data = $simpleItemStorage.allItems();
+    }
+
+    item() {
+        const entry = this._data[this.index()];
+        return entry ? entry.item : null;
     }
 
     drawItem(index) {
-        const rect = this.itemRect(index);
         const entry = this._data[index];
-        this.drawItemName(entry.item, rect.x, rect.y, rect.width - 100);
+        if (!entry) return;
+        const item = entry.item;
+        const numberWidth = this.textWidth("000");
+        const rect = this.itemLineRect(index);
+        this.changePaintOpacity(true);
+        this.drawItemName(item, rect.x, rect.y, rect.width - numberWidth);
         this.drawText("x" + entry.qty, rect.x, rect.y, rect.width, "right");
+        this.changePaintOpacity(true);
     }
 
-    maxCols() {
-        return 1;
-    }
-
-    itemHeight() {
-        return this.lineHeight();
+    maxItems() {
+        return this._data ? this._data.length : 0;
     }
 }
 
@@ -237,7 +244,6 @@ class Window_StorageCommand extends Window_HorzCommand {
         return 24;
     }
 }
-
 
 PluginManager.registerCommand("JosoBankStorageSystem", "OpenStorage", () => {
     SceneManager.push(Scene_SimpleStorage);
