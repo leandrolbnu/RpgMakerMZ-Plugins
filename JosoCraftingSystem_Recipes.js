@@ -54,24 +54,28 @@
  * - You can set `autoLearn: false` to require unlocking a recipe through events.
  * - Avoid duplicate recipe IDs – each must be unique.
  * 
- * ============================================================================
+ * ============================================================================ 
  * Author: JosoGaming
  * ============================================================================
- * YouTube: https://www.youtube.com/@JosoGaming
  * Email: leandro.bnu@hotmail.com
- * Contact: Reach out through the channel for inquiries or permission requests.
- *
- * ============================================================================
+ * Contact: Reach out through the my email for inquiries or permission requests.
+ * My Gaming YouTube channel: https://www.youtube.com/@JosoGaming
+ * ============================================================================ 
  * LICENSE
  * ============================================================================
- * This plugin is proprietary and was developed specifically for JosoGaming.
+ * This plugin is proprietary and was developed by JosoGaming.
  * Redistribution, modification, or reuse in other projects is strictly forbidden
- * unless you are the original author or have written permission. 
+ * unless you have written permission. 
  */
 
-
+//=============================================================================
+// Crafting Recipes - Defines all available crafting recipes in the game
+//=============================================================================
 (() => {
 
+  //=============================================================================
+  // CraftingRecipe - Data model for individual crafting recipes
+  //=============================================================================
   class CraftingRecipe {
     constructor(id, name, type, description, ingredients, result, autoLearn = true) {
       this.id = id;
@@ -84,6 +88,9 @@
     }
   }
 
+  //=============================================================================
+  // Recipe Definitions - List of all recipes accessible to the crafting system
+  //=============================================================================
   window.CraftingRecipes = [
     new CraftingRecipe(
       1,
@@ -127,6 +134,5 @@
 
     // add more recipes here...
   ];
-
 
 })();

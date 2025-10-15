@@ -1,37 +1,39 @@
 /*:
  * @target MZ
- * @plugindesc [v1.3] Dynamic lighting system with per-map darkness, colored lights, optional flicker and battle support. | By JosoGaming
- * 
+ * @plugindesc [v1.3] Dynamic lighting system with per-map darkness, colored 
+ * lights, optional flicker and battle support | By JosoGaming
+ * @author JosoGaming
+ *
+ * @help
  * ============================================================================
- * 📘 USAGE INSTRUCTIONS – DYNAMIC LIGHTING SYSTEM
+ * 🔧 DynamicLightingSystem – DYNAMIC LIGHTING SYSTEM
  * ============================================================================
  *
- * This plugin adds a darkness overlay and dynamic lights to maps.
+ * Adds a darkness overlay and dynamic lights to maps.
  * Darkness is configured per map, and lights are created using comments
- * in event pages. The system supports custom colors and optional flicker effect.
- * 
+ * in event pages. Supports custom colors and optional flicker effect.
+ *
  * ----------------------------------------------------------------------------
  * 🔹 How to enable darkness on a map:
  * ----------------------------------------------------------------------------
  * In the map's **Note** field, add the following tag:
- * 
+ *
  *     <darknessLevel:0.6>
- * 
- * Where "0.6" defines the darkness intensity (range: 0 to 1).
- * Use 0 for no darkness, and higher values to increase darkness.
- * 
+ *
+ * Where "0.6" defines darkness intensity (range: 0 to 1).
+ * Use 0 for no darkness; higher values increase darkness.
+ *
  * ----------------------------------------------------------------------------
  * 🔸 How to create lights on events:
  * ----------------------------------------------------------------------------
  * On the **active page** of the event, add Comment lines with the tags:
- * 
+ *
  *     <lightRadius:100>         ← Sets the size of the light
  *     <lightColor:#ffaa00>      ← (Optional) Hex color of the light
  *     <lightFlicker:true>       ← (Optional) Enables flicker effect
- * 
- * You can use just the radius or combine all tags.
- * Lights only appear on active event pages.
- * 
+ *
+ * Lights appear only on active event pages.
+ *
  * ----------------------------------------------------------------------------
  * 💡 Examples:
  * ----------------------------------------------------------------------------
@@ -42,50 +44,53 @@
  * ----------------------------------------------------------------------------
  * 🎨 Suggested Light Colors (Hex Codes):
  * ----------------------------------------------------------------------------
- * Warm Light     → #ffcc99   (soft orange, cozy)
- * Cold Light     → #aaccff   (pale blue, icy)
- * Fire Light     → #ff6600   (vivid flame orange)
- * Candle Light   → #ffddaa   (dim yellowish warm)
- * Torch Light    → #ff9933   (slightly deeper orange)
- * Purple Light   → #cc66ff   (mystic or arcane)
- * Red Light      → #ff4444   (warning, danger)
- * Green Light    → #44ff44   (toxic, magic, nature)
- * Yellow Light   → #ffff66   (bright, cheerful)
- * Blue Light     → #6699ff   (cool or electric)
- * White Light    → #ffffff   (neutral, default)
- * 
+ * Warm Light     → #ffcc99
+ * Cold Light     → #aaccff
+ * Fire Light     → #ff6600
+ * Candle Light   → #ffddaa
+ * Torch Light    → #ff9933
+ * Purple Light   → #cc66ff
+ * Red Light      → #ff4444
+ * Green Light    → #44ff44
+ * Yellow Light   → #ffff66
+ * Blue Light     → #6699ff
+ * White Light    → #ffffff
+ *
  * ----------------------------------------------------------------------------
  * 🧪 Tips:
  * ----------------------------------------------------------------------------
- * - To create light in a fixed position, use an invisible event.
- * - Flickering is ideal for torches, fireplaces or crystals.
- * - Use warm colors (#ff9900) for fire and cool tones (#88ccff) for magic effects.
- * - Lights automatically follow the event as it moves.
- * 
+ * - Use invisible events for fixed-position lights.
+ * - Flickering works well for torches, fireplaces, or crystals.
+ * - Warm colors (#ff9900) for fire, cool tones (#88ccff) for magic effects.
+ * - Lights automatically follow moving events.
+ *
  * ----------------------------------------------------------------------------
  * 🔧 Compatibility:
  * ----------------------------------------------------------------------------
- * This plugin is standalone and has no external dependencies.
- * You can combine it with systems like weather or time of day
- * by dynamically changing the <darknessLevel> tag or switching maps.
+ * Standalone plugin with no external dependencies.
+ * Can be combined with systems like weather or time of day by
+ * dynamically changing <darknessLevel> or switching maps.
  *
  * ============================================================================
  * Author: JosoGaming
  * ============================================================================
- * YouTube: https://www.youtube.com/@JosoGaming
  * Email: leandro.bnu@hotmail.com
- * Contact: Reach out through the channel for inquiries or permission requests.
- *
+ * Contact: Reach out through my email for inquiries or permission requests.
+ * My Gaming YouTube channel: https://www.youtube.com/@JosoGaming
  * ============================================================================
  * LICENSE
  * ============================================================================
- * This plugin is proprietary and was developed specifically for JosoGaming.
+ * This plugin is proprietary and was developed by JosoGaming.
  * Redistribution, modification, or reuse in other projects is strictly forbidden
- * unless you are the original author or have written permission. 
+ * unless you have written permission.
  */
 
+
 (() => {
-  // Setup darkness por mapa
+
+  //=============================================================================
+  // Map Darkness Setup - Reads map note for darkness level and stores it
+  //=============================================================================
   const _Game_Map_setup = Game_Map.prototype.setup;
   Game_Map.prototype.setup = function(mapId) {
     _Game_Map_setup.call(this, mapId);
@@ -97,7 +102,9 @@
     return this._darknessLevel || 0;
   };
 
-  // Creates dark layer + lights in the map
+  //=============================================================================
+  // Spriteset_Map.createLowerLayer - Adds darkness overlay and event lights container
+  //=============================================================================
   const _Spriteset_Map_createLowerLayer = Spriteset_Map.prototype.createLowerLayer;
   Spriteset_Map.prototype.createLowerLayer = function() {
     _Spriteset_Map_createLowerLayer.call(this);
@@ -112,15 +119,18 @@
     this._eventLightsInitialized = false;
   };
 
+  //=============================================================================
+  // Spriteset_Map.update - Updates darkness opacity and positions event lights
+  //=============================================================================
   const _Spriteset_Map_update = Spriteset_Map.prototype.update;
   Spriteset_Map.prototype.update = function() {
     _Spriteset_Map_update.call(this);
-
-    // Updates darkness opacity
     const darkness = $gameMap ? $gameMap.darknessLevel() * 255 : 0;
-    if (this._darknessSprite) this._darknessSprite.opacity = darkness;
+   
+    if (this._darknessSprite) {
+      this._darknessSprite.opacity = darkness;
+    }
 
-    // Creates event lights just once
     if (!this._eventLightsInitialized && $gameMap) {
       this._eventLights = [];
       for (const event of $gameMap.events()) {
@@ -150,71 +160,105 @@
           light.x = event.screenX();
           light.y = event.screenY() - ($gameMap.tileHeight() / 2);
 
-        if (light._flicker) {
-        const flickerSpeed = 0.15; // Higher values = Faster effect
-        const flickerAmount = 0.15; // Variation intensity
+          if (light._flicker) {
+            const flickerSpeed = 0.15; // Higher values = Faster effect
+            const flickerAmount = 0.15; // Intensity variation
 
-        // Generates a pseudo-random value using sine + temporal noise to vary rapidly and irregularly.
-        const t = performance.now() * flickerSpeed;
-        const flickerValue = (Math.sin(t * 10) + Math.sin(t * 7 + 1) + Math.sin(t * 13 + 2)) / 3;
+            // Generates a pseudo-random value using sine + temporal noise to vary rapidly and irregularly of the flickering.
+            const t = performance.now() * flickerSpeed;
+            const flickerValue = (Math.sin(t * 10) + Math.sin(t * 7 + 1) + Math.sin(t * 13 + 2)) / 3;
 
-        const scale = 1 + flickerValue * flickerAmount;
-        light.scale.x = scale;
-        light.scale.y = scale;
+            const scale = 1 + flickerValue * flickerAmount;
+            light.scale.x = scale;
+            light.scale.y = scale;
 
-        light.alpha = 0.75 + flickerValue * 0.25;
-        } else {
-        light.scale.x = 1;
-        light.scale.y = 1;
-        light.alpha = 1;
-        }
+            light.alpha = 0.75 + flickerValue * 0.25;
+          } else {
+            light.scale.x = 1;
+            light.scale.y = 1;
+            light.alpha = 1;
+          }
         }
       }
     }
   };
 
-  // Reads the light radius from the event's comment
+  //=============================================================================
+  // Event Light Helpers - Reads radius, color, and flicker from event comments
+  //=============================================================================
   function getEventLightRadius(event) {
-    if (!event) return 0;
+    if (!event) {
+      return 0;
+    }
+
     const page = event.page();
-    if (!page) return 0;
+    if (!page) {
+      return 0;
+    }
+    
     const comments = page.list.filter(cmd => cmd.code === 108 || cmd.code === 408)
       .map(cmd => cmd.parameters[0]);
+    
     for (const line of comments) {
       const match = line.match(/<lightRadius:(\d+)>/i);
-      if (match) return Number(match[1]);
+      if (match) {
+        return Number(match[1]);
+      }
     }
+
     return 0;
   }
 
   // Reads the light color from the event's comment
   function getEventLightColor(event) {
-    if (!event) return null;
+    if (!event) {
+      return null;
+    }
+  
     const page = event.page();
-    if (!page) return null;
+    if (!page) {
+      return null;
+    }
+  
     const comments = page.list.filter(cmd => cmd.code === 108 || cmd.code === 408)
       .map(cmd => cmd.parameters[0]);
+  
     for (const line of comments) {
       const match = line.match(/<lightColor:(#[0-9a-fA-F]{6})>/);
-      if (match) return match[1];
+      if (match) {
+        return match[1];
+      }
     }
+
     return null;
   }
 
   // Check if the event must have flickering
   function getEventLightFlicker(event) {
-    if (!event) return false;
+    if (!event) {
+      return false;
+    }
+
     const page = event.page();
-    if (!page) return false;
+    if (!page) {
+      return false;
+    }
+
     const comments = page.list.filter(cmd => cmd.code === 108 || cmd.code === 408)
       .map(cmd => cmd.parameters[0]);
+    
     for (const line of comments) {
-      if (line.match(/<lightFlicker:true>/i)) return true;
+      if (line.match(/<lightFlicker:true>/i)) {
+        return true;
+      }
     }
+
     return false;
   }
 
-  // Creates the light sprite with gradient color
+  //=============================================================================
+  // Create Light Sprite - Generates a circular gradient light for events
+  //=============================================================================
   function createLightSprite(radius, colorHex = "#ffffff") {
     const sprite = new Sprite();
     const diameter = radius * 2;
@@ -240,14 +284,21 @@
     return sprite;
   }
 
-  // Convert HEX to RGB
+  //=============================================================================
+  // HEX to RGB - Converts hexadecimal color strings to RGB objects
+  //=============================================================================
   function hexToRgb(hex) {
     hex = hex.replace(/^#/, "");
     if (hex.length === 3) {
       hex = hex.split("").map(h => h + h).join("");
     }
+
     const bigint = parseInt(hex, 16);
-    if (isNaN(bigint)) return null;
+   
+    if (isNaN(bigint)) {
+      return null;
+    }
+   
     return {
       r: (bigint >> 16) & 255,
       g: (bigint >> 8) & 255,

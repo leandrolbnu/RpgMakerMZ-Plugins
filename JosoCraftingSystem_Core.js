@@ -3,6 +3,7 @@
  * @plugindesc [v1.0] Simple crafting system with workbench filtering and visual interface | By JosoGaming
  * @author JosoGaming
  * 
+ * @help
  * ============================================================================
  * 🔧 JosoCraftingSystem_Core – CRAFTING SYSTEM ENGINE
  * ============================================================================
@@ -64,23 +65,25 @@
  * [✓] JosoCraftingSystem_Recipes
  * [✓] JosoCraftingSystem_Core
  *
- * ============================================================================
+ * ============================================================================ 
  * Author: JosoGaming
  * ============================================================================
- * YouTube: https://www.youtube.com/@JosoGaming
  * Email: leandro.bnu@hotmail.com
- * Contact: Reach out through the channel for inquiries or permission requests.
- *
- * ============================================================================
+ * Contact: Reach out through the my email for inquiries or permission requests.
+ * My Gaming YouTube channel: https://www.youtube.com/@JosoGaming
+ * ============================================================================ 
  * LICENSE
  * ============================================================================
- * This plugin is proprietary and was developed specifically for JosoGaming.
+ * This plugin is proprietary and was developed by JosoGaming.
  * Redistribution, modification, or reuse in other projects is strictly forbidden
- * unless you are the original author or have written permission. 
+ * unless you have written permission. 
  */
 
-
+//=============================================================================
+// Crafting System - Handles recipe learning, crafting logic, and crafting scenes
+//=============================================================================
 (() => {
+
   //=============================================================================
   // CraftingManager - Handles learned recipes
   //=============================================================================
@@ -91,7 +94,10 @@
 
     isRecipeLearned(id) {
       const recipe = RawCraftingRecipes.find(r => r.id === id);
-      if (!recipe) return false;
+      if (!recipe) {
+        return false;
+      }
+
       return recipe.autoLearn !== false || this._learnedRecipes.has(id);
     },
 
@@ -125,7 +131,10 @@
     }
 
     canCraft() {
-      if (!CraftingManager.isRecipeLearned(this.id)) return false;
+      if (!CraftingManager.isRecipeLearned(this.id)) {
+        return false;
+      }
+
       return this.ingredients.every(ing => {
         const have = $gameParty.numItems($dataItems[ing.itemId]) || 0;
         return have >= ing.quantity;
@@ -137,22 +146,22 @@
   // Recipes (converted)
   //=============================================================================
   const CraftingRecipes = RawCraftingRecipes.map(r => new CraftingRecipe(
-    r.id, r.name, r.type, r.description, r.ingredients, r.result, r.autoLearn ?? true
+  r.id, r.name, r.type, r.description, r.ingredients, r.result, r.autoLearn ?? true
   ));
 
   //=============================================================================
   // Title Window
   //=============================================================================
   class Window_CraftingTitle extends Window_Base {
-    constructor(rect, text = "Crafting Menu") {
-      super(rect);
-      this._text = text;
-      this.refresh();
-    }
-    refresh() {
-      this.contents.clear();
-      this.drawText(this._text, 0, 0, this.contents.width, 'center');
-    }
+  constructor(rect, text = "Crafting Menu") {
+    super(rect);
+    this._text = text;
+    this.refresh();
+  }
+  refresh() {
+    this.contents.clear();
+    this.drawText(this._text, 0, 0, this.contents.width, 'center');
+  }
   }
 
   //=============================================================================
@@ -171,7 +180,7 @@
         alchemy: 176,   
         //  Add more types here...
       };        
- 
+
       this.refresh();
       this.select(0);
       this.activate();
@@ -195,11 +204,8 @@
       const recipe = this._recipes[index];
       const rect = this.itemRectWithPadding(index);
       this.drawItemBackground(index);
-
       const iconIndex = this._typeIcons[recipe.type] ?? 0; 
-
       this.drawIcon(iconIndex, rect.x + 4, rect.y + (rect.height - ImageManager.iconHeight) / 2);
-
       const textX = rect.x + 4 + ImageManager.iconWidth + 4;
       const textWidth = rect.width - (textX - rect.x);
       this.drawText(recipe.name, textX, rect.y, textWidth);      
@@ -215,89 +221,96 @@
   // Recipe Detail List
   //=============================================================================
   class Window_CraftingDetail extends Window_Command {
-    constructor(rect) {
-      super(rect);
-      this._recipe = null;
-      this.deactivate();
+  constructor(rect) {
+    super(rect);
+    this._recipe = null;
+    this.deactivate();
+  }
+
+  makeCommandList() {
+    if (this._recipe) {
+      this.addCommand("Craft", "craft", this._recipe.canCraft());
+    }
+  }
+
+  setRecipe(recipe) {
+    this._recipe = recipe;
+    this.refresh();
+    this.select(0);
+  }
+
+  refresh() {
+    this.clearCommandList();
+    this.makeCommandList();
+    super.refresh();
+    this.drawRecipeDetails();
+  }
+
+  drawRecipeDetails() {
+    const lineHeight = this.lineHeight();
+    const commandHeight = this.fittingHeight(this.maxItems());
+    let y = commandHeight + 8;
+
+    if (!this._recipe) {
+      return;
     }
 
-    makeCommandList() {
-      if (this._recipe) {
-        this.addCommand("Craft", "craft", this._recipe.canCraft());
-      }
-    }
+    this.contents.clearRect(0, y, this.contents.width, this.contents.height - y);
 
-    setRecipe(recipe) {
-      this._recipe = recipe;
-      this.refresh();
-      this.select(0);
-    }
+    this.drawText(this._recipe.name, 0, y, this.contents.width, 'center');
+    y += lineHeight + 4;
 
-    refresh() {
-      this.clearCommandList();
-      this.makeCommandList();
-      super.refresh();
-      this.drawRecipeDetails();
-    }
+    this.drawText(this._recipe.description, 0, y, this.contents.width, 'left');
+    y += lineHeight * 2;
 
-    drawRecipeDetails() {
-      const lineHeight = this.lineHeight();
-      const commandHeight = this.fittingHeight(this.maxItems());
-      let y = commandHeight + 8;
+    this.drawText("Ingredients:", 0, y, this.contents.width, 'left');
+    y += lineHeight * 2;
 
-      if (!this._recipe) return;
+    this._recipe.ingredients.forEach(ing => {
+      const item = $dataItems[ing.itemId];
+      const have = $gameParty.numItems(item);
+      const qtyText = `${have}/${ing.quantity}`;
 
-      this.contents.clearRect(0, y, this.contents.width, this.contents.height - y);
+      const iconWidth = ImageManager.iconWidth;
+      const iconMargin = 4;
+      const iconBoxWidth = iconWidth + iconMargin;
+      const qtyTextWidth = this.textWidth(qtyText);
+      const qtyTextX = this.contents.width - qtyTextWidth;
+      const itemNameX = iconBoxWidth;
+      const itemNameWidth = qtyTextX - itemNameX - 8;
 
-      this.drawText(this._recipe.name, 0, y, this.contents.width, 'center');
-      y += lineHeight + 4;
+      const colorIndex = (have >= ing.quantity) ? 0 : 17;
+      this.changeTextColor(ColorManager.textColor(colorIndex));
 
-      this.drawText(this._recipe.description, 0, y, this.contents.width, 'left');
-      y += lineHeight * 2;
-
-      this.drawText("Ingredients:", 0, y, this.contents.width, 'left');
-      y += lineHeight * 2;
-
-      this._recipe.ingredients.forEach(ing => {
-        const item = $dataItems[ing.itemId];
-        const have = $gameParty.numItems(item);
-        const qtyText = `${have}/${ing.quantity}`;
-
-        const iconWidth = ImageManager.iconWidth;
-        const iconMargin = 4;
-        const iconBoxWidth = iconWidth + iconMargin;
-        const qtyTextWidth = this.textWidth(qtyText);
-        const qtyTextX = this.contents.width - qtyTextWidth;
-        const itemNameX = iconBoxWidth;
-        const itemNameWidth = qtyTextX - itemNameX - 8;
-
-        const colorIndex = (have >= ing.quantity) ? 0 : 17;
-        this.changeTextColor(ColorManager.textColor(colorIndex));
-
-        this.drawIcon(item.iconIndex, 0, y);
-        this.drawText(item.name, itemNameX, y, itemNameWidth, 'left');
-        this.drawText(qtyText, qtyTextX, y, qtyTextWidth, 'right');
-        this.resetTextColor();
-
-        y += lineHeight;
-      });
+      this.drawIcon(item.iconIndex, 0, y);
+      this.drawText(item.name, itemNameX, y, itemNameWidth, 'left');
+      this.drawText(qtyText, qtyTextX, y, qtyTextWidth, 'right');
+      this.resetTextColor();
 
       y += lineHeight;
-      this.drawText("Crafted Item:", 0, y, this.contents.width, 'left');
-      y += lineHeight * 1.5;
+    });
 
-      let result = this._recipe.result;
-      let item;
-      if (result.itemId) item = $dataItems[result.itemId];
-      else if (result.weaponId) item = $dataWeapons[result.weaponId];
-      else if (result.armorId) item = $dataArmors[result.armorId];
+    y += lineHeight;
+    this.drawText("Crafted Item:", 0, y, this.contents.width, 'left');
+    y += lineHeight * 1.5;
 
-      if (item) {
-        const iconBoxWidth = ImageManager.iconWidth + 4;
-        this.drawIcon(item.iconIndex, 0, y);
-        this.drawText(item.name, iconBoxWidth, y, this.contents.width - iconBoxWidth, 'left');
-      }
+    let result = this._recipe.result;
+    let item;
+
+    if (result.itemId) {
+      item = $dataItems[result.itemId];
+    } else if (result.weaponId) {
+      item = $dataWeapons[result.weaponId];
+    } else if (result.armorId) {
+      item = $dataArmors[result.armorId];
     }
+
+    if (item) {
+      const iconBoxWidth = ImageManager.iconWidth + 4;
+      this.drawIcon(item.iconIndex, 0, y);
+      this.drawText(item.name, iconBoxWidth, y, this.contents.width - iconBoxWidth, 'left');
+    }
+  }
   }
 
   //=============================================================================
@@ -319,11 +332,7 @@
       const titleHeight = 70;
       const leftWidth = Graphics.boxWidth / 3;
       const rightWidth = Graphics.boxWidth - leftWidth;
-
-      // Set up the title accordingly to the workbench
       const titleText = Scene_Crafting.getWorkbenchTitle();
-
-      // Creates the window title dinamically
       this._titleWindow = new Window_CraftingTitle(new Rectangle(0, 0, Graphics.boxWidth, titleHeight), titleText);
       this.addWindow(this._titleWindow);
 
@@ -331,13 +340,14 @@
         new Rectangle(0, titleHeight, leftWidth, Graphics.boxHeight - titleHeight),
         Scene_Crafting._workbenchType
       );
+
       this.addWindow(this._listWindow);
 
       this._detailWindow = new Window_CraftingDetail(
         new Rectangle(leftWidth, titleHeight, rightWidth, Graphics.boxHeight - titleHeight)
       );
-      this.addWindow(this._detailWindow);
 
+      this.addWindow(this._detailWindow);
       this._listWindow.setHandler('cancel', this.popScene.bind(this));
 
       this._listWindow.setHandler('ok', () => {
@@ -355,7 +365,6 @@
 
       this._listWindow.activate();
       this._listWindow.select(0);
-
       this.updateDetailWindow();
     }
 
@@ -377,9 +386,14 @@
       });
 
       let resultItem;
-      if (recipe.result.itemId) resultItem = $dataItems[recipe.result.itemId];
-      else if (recipe.result.weaponId) resultItem = $dataWeapons[recipe.result.weaponId];
-      else if (recipe.result.armorId) resultItem = $dataArmors[recipe.result.armorId];
+
+      if (recipe.result.itemId) {
+        resultItem = $dataItems[recipe.result.itemId];
+      } else if (recipe.result.weaponId) {
+        resultItem = $dataWeapons[recipe.result.weaponId];
+      } else if (recipe.result.armorId) {
+        resultItem = $dataArmors[recipe.result.armorId];
+      }
 
       if (resultItem) {
         $gameParty.gainItem(resultItem, recipe.result.quantity);
@@ -410,7 +424,6 @@
 
       const type = Scene_Crafting._workbenchType;
       const bgName = backgroundMap[type] || "craftingTest";
-
       this._backgroundSprite = new Sprite(ImageManager.loadPicture(bgName));
       this.addChild(this._backgroundSprite);
     }
